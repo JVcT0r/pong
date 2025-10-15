@@ -42,15 +42,13 @@ public class UdpClientTwoClients : MonoBehaviour
                 rb.linearVelocity = Vector2.zero;
         }
     }
-
-    void Update()
+    void FixedUpdate()
     {
         // processa mensagens vindas da thread de rede
         while (messageQueue.TryDequeue(out string msg))
         {
             ProcessMessage(msg);
         }
-
         if (myId == -1 || localCube == null) return;
 
         // Movimento vertical da raquete
@@ -73,7 +71,6 @@ public class UdpClientTwoClients : MonoBehaviour
             remoteCube.transform.position = Vector3.Lerp(remoteCube.transform.position, remotePos, Time.deltaTime * 10f);
         }
     }
-
     void ReceiveData()
     {
         IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
@@ -87,7 +84,6 @@ public class UdpClientTwoClients : MonoBehaviour
             messageQueue.Enqueue(msg);
         }
     }
-
     void ProcessMessage(string msg)
     {
         if (msg.StartsWith("ASSIGN:"))
@@ -176,12 +172,10 @@ public class UdpClientTwoClients : MonoBehaviour
             }
         }
     }
-
     public void SendUdpMessage(string msg)
     {
         client.Send(Encoding.UTF8.GetBytes(msg), msg.Length);
     }
-
     void OnApplicationQuit()
     {
         receiveThread.Abort();

@@ -7,36 +7,30 @@ public class Bola : MonoBehaviour
     private UdpClientTwoClients udpClient;
     private bool bolaLancada = false;
 
+    [Header("Regras")]
     public int PontoA = 0;
     public int PontoB = 0;
+    public float velocidade = 5f;   // Velocidade base da bola
+    public float fatorDesvio = 2f; // Quanto influencia o ponto de contato no ângulo
+    public int pontosParaVencer;
+    
+    [Header("UI")]
     public TextMeshProUGUI textoPontoA;
     public TextMeshProUGUI textoPontoB;
     public TextMeshProUGUI VitoriaLocal;
     public TextMeshProUGUI VitoriaRemote;
 
-    public float velocidade = 5f;   // Velocidade base da bola
-    public float fatorDesvio = 2f;  // Quanto influencia o ponto de contato no ângulo
-
     void Start()
     {
-        
         rb = GetComponent<Rigidbody2D>();
         udpClient = FindObjectOfType<UdpClientTwoClients>();
 
         if (udpClient != null && udpClient.myId == 2)
         {
-            Invoke("LancarBola", 1f);
+            Invoke(nameof(LancarBola), 1f);
         }
     }
-
-    void LancarBola()
-    {
-        float dirX = Random.Range(0, 2) == 0 ? -1 : 1;
-        float dirY = Random.Range(-0.5f, 0.5f); // inicia com pequeno ângulo
-        rb.linearVelocity = new Vector2(dirX, dirY).normalized * velocidade;
-    }
-
-    void Update()
+    void FixedUpdate()
     {
         if (udpClient == null) return;
 
@@ -55,7 +49,12 @@ public class Bola : MonoBehaviour
             udpClient.SendUdpMessage(msg);
         }
     }
-
+    void LancarBola()
+    {
+        float dirX = Random.Range(0, 2) == 0 ? -1 : 1;
+        float dirY = Random.Range(-0.5f, 0.5f); // inicia com pequeno ângulo
+        rb.linearVelocity = new Vector2(dirX, dirY).normalized * velocidade;
+    }
     void OnCollisionEnter2D(Collision2D col)
     {
         if (udpClient == null) return;
@@ -87,7 +86,6 @@ public class Bola : MonoBehaviour
             ResetBola();
         }
     }
-
     void ResetBola()
     {
         transform.position = Vector3.zero;
@@ -97,7 +95,6 @@ public class Bola : MonoBehaviour
         {
             GameOver();
         }
-        
         else if (udpClient != null && udpClient.myId == 2)
         {
             Invoke("LancarBola", 1f);
@@ -105,11 +102,7 @@ public class Bola : MonoBehaviour
             string msg = "SCORE:" + PontoA + ";" + PontoB;
             udpClient.SendUdpMessage(msg);
         }
-        
-        
-
     }
-
     void GameOver()
     {
         transform.position = Vector3.zero;
@@ -130,6 +123,5 @@ public class Bola : MonoBehaviour
         {
             VitoriaLocal.gameObject.SetActive(true);
         }
-        
     }
 }
