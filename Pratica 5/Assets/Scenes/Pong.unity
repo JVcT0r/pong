@@ -385,8 +385,8 @@ Transform:
   m_GameObject: {fileID: 181103209}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.36, y: -0.04, z: 0}
-  m_LocalScale: {x: 20.643667, y: 10.8218, z: 10.8218}
+  m_LocalPosition: {x: -0.0883, y: -0.04, z: 0}
+  m_LocalScale: {x: 21.539604, y: 10.8218, z: 10.8218}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -961,12 +961,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PontoA: 0
   PontoB: 0
+  velocidade: 15
+  fatorDesvio: 2
+  pontosParaVencer: 0
   textoPontoA: {fileID: 1890695342}
   textoPontoB: {fileID: 125305615}
   VitoriaLocal: {fileID: 1239979855}
   VitoriaRemote: {fileID: 714300591}
-  velocidade: 15
-  fatorDesvio: 2
 --- !u!1 &1067856764 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8152093384007377599, guid: edf400e70a7dff84390ab9ea5d901aca, type: 3}

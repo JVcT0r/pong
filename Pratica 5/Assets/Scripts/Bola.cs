@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Globalization;
 
 public class Bola : MonoBehaviour
 {
@@ -34,18 +35,16 @@ public class Bola : MonoBehaviour
     {
         if (udpClient == null) return;
 
-        if (!bolaLancada && udpClient.myId == 2)
+        if (!bolaLancada && udpClient.myId == 1)
         {
             bolaLancada = true;
-            Invoke("LancarBola", 1f);
+            Invoke(nameof(LancarBola), 1f);
         }
 
-        if (udpClient.myId == 2)
+        if (udpClient.myId == 1)
         {
-            string msg = "BALL:" +
-                         transform.position.x.ToString(System.Globalization.CultureInfo.InvariantCulture) + ";" +
-                         transform.position.y.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
+            string msg = $"BALL: {transform.position.x.ToString(CultureInfo.InvariantCulture)};" + 
+                         $"{transform.position.y.ToString(CultureInfo.InvariantCulture)}";
             udpClient.SendUdpMessage(msg);
         }
     }
@@ -68,7 +67,6 @@ public class Bola : MonoBehaviour
 
             // Calcula diferença (normalizado entre -1 e 1)
             float diferenca = (posYbola - posYraquete) / (alturaRaquete / 2f);
-
             // Direção X mantém, Y é baseado na diferença
             Vector2 direcao = new Vector2(Mathf.Sign(rb.linearVelocity.x), diferenca * fatorDesvio);
             rb.linearVelocity = direcao.normalized * velocidade;
@@ -76,7 +74,7 @@ public class Bola : MonoBehaviour
         else if (col.gameObject.CompareTag("Gol1"))
         {
             PontoB++;
-            textoPontoB.text = PontoB.ToString();
+            //UpdateScore(PontoB);
             ResetBola();
         }
         else if (col.gameObject.CompareTag("Gol2"))
