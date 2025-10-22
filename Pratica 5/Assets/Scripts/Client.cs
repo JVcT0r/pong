@@ -17,6 +17,7 @@ public class UdpClientTwoClients : MonoBehaviour
     public int Velocidade = 20;
     public GameObject localCube;
     public GameObject remoteCube;
+    public GameObject remoteCube2;
     public GameObject bola; // referência à bola no Inspector
 
     // Fila segura para passar mensagens da thread de rede -> main thread
@@ -99,9 +100,11 @@ public class UdpClientTwoClients : MonoBehaviour
             {
                 localCube = GameObject.Find("Player 1");
                 remoteCube = GameObject.Find("Player 2");
+                remoteCube2 = GameObject.Find("Player 3");
 
                 localCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
                 remoteCube.transform.position = new Vector3(8f, 0f, 0f);  // Direita
+                remoteCube2.transform.position = new Vector3(5f, 0f, 0f);
 
                 // Inicializa remotePos corretamente
                 remotePos = remoteCube.transform.position;
@@ -113,6 +116,7 @@ public class UdpClientTwoClients : MonoBehaviour
 
                 localCube.transform.position = new Vector3(8f, 0f, 0f);   // Direita
                 remoteCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
+                remoteCube2.transform.position = new Vector3(5f, 0f, 0f);
 
                 // Inicializa remotePos corretamente
                 remotePos = remoteCube.transform.position;
