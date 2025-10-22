@@ -113,6 +113,20 @@ public class UdpClientTwoClients : MonoBehaviour
             {
                 localCube = GameObject.Find("Player 2");
                 remoteCube = GameObject.Find("Player 1");
+                remoteCube2 = GameObject.Find("Player 3");
+
+                localCube.transform.position = new Vector3(8f, 0f, 0f);   // Direita
+                remoteCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
+                remoteCube2.transform.position = new Vector3(5f, 0f, 0f);
+
+                // Inicializa remotePos corretamente
+                remotePos = remoteCube.transform.position;
+            }
+            else if (myId == 3)
+            {
+                localCube = GameObject.Find("Player 3");
+                remoteCube = GameObject.Find("Player 1");
+                remoteCube2 = GameObject.Find("Player 2");
 
                 localCube.transform.position = new Vector3(8f, 0f, 0f);   // Direita
                 remoteCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
