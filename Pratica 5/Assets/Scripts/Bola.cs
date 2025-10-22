@@ -9,8 +9,8 @@ public class Bola : MonoBehaviour
     private bool bolaLancada = false;
 
     [Header("Regras")]
-    public int PontoA = 0;
-    public int PontoB = 0;
+    public int pontoA = 0;
+    public int pontoB = 0;
     public float velocidade = 5f;   // Velocidade base da bola
     public float fatorDesvio = 2f; // Quanto influencia o ponto de contato no ângulo
     public int pontosParaVencer;
@@ -40,10 +40,9 @@ public class Bola : MonoBehaviour
             bolaLancada = true;
             Invoke(nameof(LancarBola), 1f);
         }
-
         if (udpClient.myId == 1)
         {
-            string msg = $"BALL: {transform.position.x.ToString(CultureInfo.InvariantCulture)};" + 
+            string msg = $"BALL:{transform.position.x.ToString(CultureInfo.InvariantCulture)};" + 
                          $"{transform.position.y.ToString(CultureInfo.InvariantCulture)}";
             udpClient.SendUdpMessage(msg);
         }
@@ -54,58 +53,66 @@ public class Bola : MonoBehaviour
         float dirY = Random.Range(-0.5f, 0.5f); // inicia com pequeno ângulo
         rb.linearVelocity = new Vector2(dirX, dirY).normalized * velocidade;
     }
-    void OnCollisionEnter2D(Collision2D col)
+    void OnCollisionEnter2D(Collision2D collision)
     {
         if (udpClient == null) return;
 
-        if (col.gameObject.CompareTag("Raquete"))
+        if (collision.gameObject.CompareTag("Raquete"))
         {
             // Pega o ponto de contato
             float posYbola = transform.position.y;
-            float posYraquete = col.transform.position.y;
-            float alturaRaquete = col.collider.bounds.size.y;
+            float posYraquete = collision.transform.position.y;
+            float alturaRaquete = collision.collider.bounds.size.y;
 
             // Calcula diferença (normalizado entre -1 e 1)
-            float diferenca = (posYbola - posYraquete) / (alturaRaquete / 2f);
+            float diferenca = (posYbola - posYraquete) / (alturaRaquete / 2.0f);
             // Direção X mantém, Y é baseado na diferença
             Vector2 direcao = new Vector2(Mathf.Sign(rb.linearVelocity.x), diferenca * fatorDesvio);
             rb.linearVelocity = direcao.normalized * velocidade;
         }
-        else if (col.gameObject.CompareTag("Gol1"))
+        else if (collision.gameObject.CompareTag("Gol1"))
         {
-            PontoB++;
-            //UpdateScore(PontoB);
+            pontoB++;
+            UpdateScore(pontoA, pontoB);
             ResetBola();
         }
-        else if (col.gameObject.CompareTag("Gol2"))
+        else if (collision.gameObject.CompareTag("Gol2"))
         {
-            PontoA++;
-            textoPontoA.text = PontoA.ToString();
+            pontoA++;
+            UpdateScore(pontoA, pontoB);
             ResetBola();
         }
+    }
+
+    public void UpdateScore(int a, int b)
+    {
+        pontoA = a;
+        pontoB = b;
+        textoPontoA.text = $"Pontos: {pontoA}";
+        textoPontoB.text = $"Pontos: {pontoB}";
     }
     void ResetBola()
     {
         transform.position = Vector3.zero;
         rb.linearVelocity = Vector2.zero;
         
-        if (PontoA > 10 || PontoB > 10)
+        if (pontoA > 10 || pontoB > 10)
         {
-            GameOver();
+            //GameOver();
         }
-        else if (udpClient != null && udpClient.myId == 2)
+        else if (udpClient.myId == 2)
         {
-            Invoke("LancarBola", 1f);
-
-            string msg = "SCORE:" + PontoA + ";" + PontoB;
-            udpClient.SendUdpMessage(msg);
+            Invoke(nameof(LancarBola), 1f);
+            /*string msg = "SCORE:"{pontoA};{pontoB}";
+            udpClient.SendUdpMessage(msg);*/
         }
     }
     void GameOver()
     {
         transform.position = Vector3.zero;
         rb.linearVelocity = Vector2.zero;
-        if (PontoA > 10 && udpClient.myId == 1)
+        
+        /*if (PontoA > 10 && udpClient.myId == 1)
         {
             VitoriaLocal.gameObject.SetActive(true);
         }
@@ -120,6 +127,6 @@ public class Bola : MonoBehaviour
         else if (PontoB > 10 && udpClient.myId == 2)
         {
             VitoriaLocal.gameObject.SetActive(true);
-        }
+        }*/
     }
 }

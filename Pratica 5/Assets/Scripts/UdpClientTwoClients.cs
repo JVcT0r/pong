@@ -164,8 +164,8 @@ public class UdpClientTwoClients : MonoBehaviour
                 if (bola != null)
                 {
                     Bola bolaScript = bola.GetComponent<Bola>();
-                    bolaScript.PontoA = scoreA;
-                    bolaScript.PontoB = scoreB;
+                    /*bolaScript.PontoA = scoreA;
+                    bolaScript.PontoB = scoreB;*/
                     bolaScript.textoPontoA.text = "Pontos: " + scoreA;
                     bolaScript.textoPontoB.text = "Pontos: " + scoreB;
                 }
