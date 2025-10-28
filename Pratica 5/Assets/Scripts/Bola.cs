@@ -5,7 +5,7 @@ using System.Globalization;
 public class Bola : MonoBehaviour
 {
     private Rigidbody2D rb;
-    private UdpClientTwoClients udpClient;
+    private UdpClientFour udpClient;
     private bool bolaLancada = false;
 
     [Header("Regras")]
@@ -24,7 +24,7 @@ public class Bola : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        udpClient = FindObjectOfType<UdpClientTwoClients>();
+        udpClient = FindObjectOfType<UdpClientFour>();
 
         if (udpClient != null && udpClient.myId == 2)
         {
@@ -103,7 +103,7 @@ public class Bola : MonoBehaviour
         {
             Invoke(nameof(LancarBola), 1.0f);
             string msg = "SCORE:{pontoA};{pontoB}";
-            udpClient.SendUdpMessage(msg);*/
+            udpClient.SendUdpMessage(msg);
         }
     }
     void FimDeJogo()

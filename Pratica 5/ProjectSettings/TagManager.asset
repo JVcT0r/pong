@@ -8,6 +8,8 @@ TagManager:
   - Gol1
   - Gol2
   - Bola
+  - Gol3
+  - Gol4
   layers:
   - Default
   - TransparentFX
