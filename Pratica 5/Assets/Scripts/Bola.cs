@@ -13,13 +13,13 @@ public class Bola : MonoBehaviour
     public int pontoB = 0;
     public float velocidade = 5f;   // Velocidade base da bola
     public float fatorDesvio = 2f; // Quanto influencia o ponto de contato no ângulo
-    public int pontosParaVencer;
+    public int pontosParaVencer = 10;
     
     [Header("UI")]
     public TextMeshProUGUI textoPontoA;
     public TextMeshProUGUI textoPontoB;
-    public TextMeshProUGUI VitoriaLocal;
-    public TextMeshProUGUI VitoriaRemote;
+    public TextMeshProUGUI textoVitoriaLocal;
+    public TextMeshProUGUI textoVitoriaRemote;
 
     void Start()
     {
@@ -74,16 +74,15 @@ public class Bola : MonoBehaviour
         {
             pontoB++;
             UpdateScore(pontoA, pontoB);
-            ResetBola();
+            ResetarBola();
         }
         else if (collision.gameObject.CompareTag("Gol2"))
         {
             pontoA++;
             UpdateScore(pontoA, pontoB);
-            ResetBola();
+            ResetarBola();
         }
     }
-
     public void UpdateScore(int a, int b)
     {
         pontoA = a;
@@ -91,42 +90,34 @@ public class Bola : MonoBehaviour
         textoPontoA.text = $"Pontos: {pontoA}";
         textoPontoB.text = $"Pontos: {pontoB}";
     }
-    void ResetBola()
+    void ResetarBola()
     {
         transform.position = Vector3.zero;
         rb.linearVelocity = Vector2.zero;
         
-        if (pontoA > 10 || pontoB > 10)
+        if (pontoA >= pontosParaVencer || pontoB >= pontosParaVencer)
         {
-            //GameOver();
+            FimDeJogo();
         }
-        else if (udpClient.myId == 2)
+        else if (udpClient.myId == 1)
         {
-            Invoke(nameof(LancarBola), 1f);
-            /*string msg = "SCORE:"{pontoA};{pontoB}";
+            Invoke(nameof(LancarBola), 1.0f);
+            string msg = "SCORE:{pontoA};{pontoB}";
             udpClient.SendUdpMessage(msg);*/
         }
     }
-    void GameOver()
+    void FimDeJogo()
     {
         transform.position = Vector3.zero;
         rb.linearVelocity = Vector2.zero;
         
-        /*if (PontoA > 10 && udpClient.myId == 1)
+        if (pontoA >= pontosParaVencer)
         {
-            VitoriaLocal.gameObject.SetActive(true);
+            textoVitoriaLocal.gameObject.SetActive(true);
         }
-        else if (PontoA > 10 && udpClient.myId == 2)
+        else 
         {
-            VitoriaRemote.gameObject.SetActive(true);
+            textoVitoriaRemote.gameObject.SetActive(true);
         }
-        else if (PontoB > 10 && udpClient.myId == 1)
-        {
-            VitoriaRemote.gameObject.SetActive(true);
-        }
-        else if (PontoB > 10 && udpClient.myId == 2)
-        {
-            VitoriaLocal.gameObject.SetActive(true);
-        }*/
     }
 }

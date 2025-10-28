@@ -959,8 +959,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb7ee2cf82064fe469db2c0499d7d416, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PontoA: 0
-  PontoB: 0
+  pontoA: 0
+  pontoB: 0
   velocidade: 15
   fatorDesvio: 2
   pontosParaVencer: 0
