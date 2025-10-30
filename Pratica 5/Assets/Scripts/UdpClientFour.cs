@@ -14,13 +14,12 @@ public class UdpClientFour : MonoBehaviour
     public int serverPort = 5001;
     public string serverIP = "127.0.0.1";
     
-    [Header("Prefabs")]
-    public GameObject bolaPrefab;
-    public GameObject playerPrefab;
+    [Header("Referências da Cena")]
+    public GameObject bola;
+    public List<GameObject> playersInScene = new List<GameObject>();
     
     private readonly Dictionary<int, GameObject> players = new Dictionary<int, GameObject>();
     private readonly Dictionary<int, Vector3> targetPositions = new Dictionary<int, Vector3>();
-    private GameObject bola;
     
     private UdpClient client;
     private Thread receiveThread;
@@ -33,12 +32,26 @@ public class UdpClientFour : MonoBehaviour
     public float interpolationSpeed = 15.0f;
     public float yClamp = 3.0f;
 
+    [Header("Teclas de Movimento")] 
+    public KeyCode p1Up = KeyCode.W;
+    public KeyCode p1Down = KeyCode.S;
+    
+    public KeyCode p2Up = KeyCode.UpArrow;
+    public KeyCode p2Down = KeyCode.DownArrow;
+    
+    public KeyCode p3Up = KeyCode.I;
+    public KeyCode p3Down = KeyCode.K;
+    
+    public KeyCode p4Up = KeyCode.RightArrow;
+    public KeyCode p4Down = KeyCode.LeftArrow;
+
     void Start()
     {
         client = new UdpClient();
         serverEP = new IPEndPoint(IPAddress.Parse(serverIP), serverPort);
         client.Connect(serverEP);
 
+        running = true;
         receiveThread = new Thread(ReceiveData);
         receiveThread.Start();
 
@@ -46,7 +59,6 @@ public class UdpClientFour : MonoBehaviour
     }
     void FixedUpdate()
     {
-        // processa mensagens vindas da thread de rede
         while (messageQueue.TryDequeue(out string msg))
         {
             ProcessMessage(msg);
@@ -67,15 +79,58 @@ public class UdpClientFour : MonoBehaviour
     }
     void HandleLocalMovement()
     {
-        float v = Input.GetAxis("Vertical");
+        if (!players.ContainsKey(myId)) return;
         GameObject me = players[myId];
-        
+        float v = 0.0f;
+
+        switch (myId)
+        {
+            case 1:
+                if (Input.GetKey(p1Up))
+                {
+                    v = 1.0f;
+                }
+                else if (Input.GetKey(p1Down))
+                {
+                    v = -1.0f;
+                }
+                break;
+            case 2:
+                if (Input.GetKey(p2Up))
+                {
+                    v = 1.0f;
+                }
+                else if (Input.GetKey(p2Down))
+                {
+                    v = -1.0f;
+                }
+                break;
+            case 3:
+                if (Input.GetKey(p3Up))
+                {
+                    v = 1.0f;
+                }
+                else if (Input.GetKey(p3Down))
+                {
+                    v = -1.0f;
+                }
+                break;
+            case 4:
+                if (Input.GetKey(p4Up))
+                {
+                    v = 1.0f;
+                }
+                else if (Input.GetKey(p4Down))
+                {
+                    v = -1.0f;
+                }
+                break;
+        }
         me.transform.Translate(Vector3.up * v * moveSpeed * Time.deltaTime);
         Vector3 pos = me.transform.position;
         pos.y = Mathf.Clamp(pos.y, -yClamp, yClamp);
-        
+        me.transform.position = pos;
     }
-
     void SendLocalPosition()
     {
         Vector3 pos = players[myId].transform.position;
@@ -92,14 +147,9 @@ public class UdpClientFour : MonoBehaviour
             {
                 byte[] data = client.Receive(ref remoteEP);
                 string msg = Encoding.UTF8.GetString(data);
-
-                // joga mensagem na fila
                 messageQueue.Enqueue(msg);
             }
-            catch
-            {
-                break;
-            }
+            catch { break;}
         }
     }
     void ProcessMessage(string msg)
@@ -160,14 +210,14 @@ public class UdpClientFour : MonoBehaviour
             new Vector3(0.0f, 4.0f, 0.0f),
             new Vector3(8.0f, -4.0f, 0.0f)
         };
-        for (int i = 1; i <= 4; i++)
+        /*for (int i = 1; i <= 4; i++)
         {
-            GameObject p = Instantiate(playerPrefab);
+            
             p.name = $"Player {i}";
             p.transform.position = positions[i - 1];
             players[i] = p;
             targetPositions[i] = p.transform.position;
-        }
+        }*/
     }
     public void SendUdpMessage(string msg)
     {
