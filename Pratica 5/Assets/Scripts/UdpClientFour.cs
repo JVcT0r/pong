@@ -140,16 +140,16 @@ public class UdpClientFour : MonoBehaviour
         else if (msg.StartsWith("POS:"))
         {
             string[] parts = msg.Substring(4).Split(';');
-            if (parts.Length == 3) return;
+            if (parts.Length != 3) return;
                 
             int id = int.Parse(parts[0]);
-            if (id != myId) return;
+            if (id == myId) return;
                 
             float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
             float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
             targetPositions[id] = new Vector3(x, y, 0);
         }
-        else if (msg.StartsWith("BALL:") && bola == null && myId != 1)
+        else if (msg.StartsWith("BALL:") && bola != null && myId != 1)
         {
             string[] parts = msg.Substring(5).Split(';');
             if (parts.Length == 2)
@@ -160,7 +160,7 @@ public class UdpClientFour : MonoBehaviour
             }
            
         }
-        else if (msg.StartsWith("SCORE:") && bola == null)
+        else if (msg.StartsWith("SCORE:") && bola != null)
         {
             string[] parts = msg.Substring(6).Split(';');
             if (parts.Length == 2)
@@ -169,7 +169,12 @@ public class UdpClientFour : MonoBehaviour
                 int scoreB = int.Parse(parts[1]);
 
                 Bola bolaScript = bola.GetComponent<Bola>();
-                bolaScript.UpdateScore(scoreA, scoreB);
+                if (bolaScript != null)
+                {
+                    bolaScript.pontoA = scoreA;
+                    bolaScript.pontoB = scoreB;
+                    bolaScript.AtualizarPlacar();
+                }
             }
         }
     }

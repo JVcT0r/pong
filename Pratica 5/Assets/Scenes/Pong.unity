@@ -685,7 +685,7 @@ GameObject:
   - component: {fileID: 714300592}
   - component: {fileID: 714300591}
   m_Layer: 5
-  m_Name: Tela de vitoria P2
+  m_Name: Vitoria P2(B)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1045,7 +1045,7 @@ GameObject:
   - component: {fileID: 1239979856}
   - component: {fileID: 1239979855}
   m_Layer: 5
-  m_Name: Tela de vitoria P1
+  m_Name: Vitoria P1(A)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1819,7 +1819,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 457, y: -40}
+  m_AnchoredPosition: {x: 434.4, y: -40.3}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1890695342
@@ -2078,6 +2078,14 @@ PrefabInstance:
       propertyPath: textoPontoB
       value: 
       objectReference: {fileID: 125305615}
+    - target: {fileID: 2689220864640525742, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
+      propertyPath: textoVitoriaA
+      value: 
+      objectReference: {fileID: 1239979855}
+    - target: {fileID: 2689220864640525742, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
+      propertyPath: textoVitoriaB
+      value: 
+      objectReference: {fileID: 714300591}
     - target: {fileID: 6945136906170427915, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
       propertyPath: m_Name
       value: Bola
