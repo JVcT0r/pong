@@ -167,10 +167,22 @@ MonoBehaviour:
   serverPort: 5001
   serverIP: 127.0.0.1
   bola: {fileID: 982695413}
-  playerPrefab: {fileID: 0}
+  playersInScene:
+  - {fileID: 251716031}
+  - {fileID: 1866964910}
+  - {fileID: 1461720964}
+  - {fileID: 1228580943}
   moveSpeed: 20
   interpolationSpeed: 15
   yClamp: 3
+  p1Up: 119
+  p1Down: 115
+  p2Up: 273
+  p2Down: 274
+  p3Up: 105
+  p3Down: 107
+  p4Up: 275
+  p4Down: 276
 --- !u!1 &125305613
 GameObject:
   m_ObjectHideFlags: 0
@@ -2054,6 +2066,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 966807097993479536, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2689220864640525742, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
       propertyPath: textoPontoA
       value: 
@@ -2065,6 +2081,14 @@ PrefabInstance:
     - target: {fileID: 6945136906170427915, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
       propertyPath: m_Name
       value: Bola
+      objectReference: {fileID: 0}
+    - target: {fileID: 8714827094995464713, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8714827094995464713, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 8714827094995464713, guid: e639da4ed116d9041b1b4ea97730b91e, type: 3}
       propertyPath: m_LocalPosition.x

@@ -52,7 +52,7 @@ public class UdpClientFour : MonoBehaviour
         client.Connect(serverEP);
 
         running = true;
-        receiveThread = new Thread(ReceiveData);
+        receiveThread = new Thread(ReceiveData) {IsBackground = true};
         receiveThread.Start();
 
         SendUdpMessage("HELLO");
@@ -64,10 +64,9 @@ public class UdpClientFour : MonoBehaviour
             ProcessMessage(msg);
         }
         if (myId == -1 || !players.ContainsKey(myId)) return;
-
+        
         HandleLocalMovement();
         SendLocalPosition();
-
         foreach (var kpv in players)
         {
             if (kpv.Key == myId) continue;
@@ -77,64 +76,37 @@ public class UdpClientFour : MonoBehaviour
             }
         }
     }
+    void OnApplicationQuit()
+    {
+        running = false;
+        client?.Close();
+        receiveThread?.Join();
+    }
     void HandleLocalMovement()
     {
-        if (!players.ContainsKey(myId)) return;
         GameObject me = players[myId];
-        float v = 0.0f;
-
-        switch (myId)
-        {
-            case 1:
-                if (Input.GetKey(p1Up))
-                {
-                    v = 1.0f;
-                }
-                else if (Input.GetKey(p1Down))
-                {
-                    v = -1.0f;
-                }
-                break;
-            case 2:
-                if (Input.GetKey(p2Up))
-                {
-                    v = 1.0f;
-                }
-                else if (Input.GetKey(p2Down))
-                {
-                    v = -1.0f;
-                }
-                break;
-            case 3:
-                if (Input.GetKey(p3Up))
-                {
-                    v = 1.0f;
-                }
-                else if (Input.GetKey(p3Down))
-                {
-                    v = -1.0f;
-                }
-                break;
-            case 4:
-                if (Input.GetKey(p4Up))
-                {
-                    v = 1.0f;
-                }
-                else if (Input.GetKey(p4Down))
-                {
-                    v = -1.0f;
-                }
-                break;
-        }
+        float v = GetPlayerInput(myId);
+        
         me.transform.Translate(Vector3.up * v * moveSpeed * Time.deltaTime);
         Vector3 pos = me.transform.position;
         pos.y = Mathf.Clamp(pos.y, -yClamp, yClamp);
         me.transform.position = pos;
     }
+    float GetPlayerInput(int id)
+    {
+        return id switch
+        {
+            1 => Input.GetKey(p1Up) ? 1.0f : Input.GetKey(p1Down) ? -1.0f : 0.0f,
+            2 => Input.GetKey(p2Up) ? 1.0f : Input.GetKey(p2Down) ? -1.0f : 0.0f,
+            3 => Input.GetKey(p3Up) ? 1.0f : Input.GetKey(p3Down) ? -1.0f : 0.0f,
+            4 => Input.GetKey(p4Up) ? 1.0f : Input.GetKey(p4Down) ? -1.0f : 0.0f,
+            _ => 0.0f
+        };
+    }
     void SendLocalPosition()
     {
         Vector3 pos = players[myId].transform.position;
-        string msg = $"POS:{myId};{pos.x.ToString("F2", CultureInfo.InvariantCulture)};{pos.y.ToString("F2", CultureInfo.InvariantCulture)}";
+        string msg = $"POS:{myId};{pos.x:F2};{pos.y:F2}";
         SendUdpMessage(msg);
     }
     void ReceiveData()
@@ -152,46 +124,46 @@ public class UdpClientFour : MonoBehaviour
             catch { break;}
         }
     }
+    public void SendUdpMessage(string msg)
+    {
+        byte[] data = Encoding.UTF8.GetBytes(msg);
+        client.Send(data, data.Length);
+    }
     void ProcessMessage(string msg)
     {
         if (msg.StartsWith("ASSIGN:"))
         {
             myId = int.Parse(msg.Substring(7));
             Debug.Log($"[Cliente] Meu ID = {myId}");
-            SpawnPlayers();
+            SetupPlayersInScene();
         }
         else if (msg.StartsWith("POS:"))
         {
             string[] parts = msg.Substring(4).Split(';');
-            if (parts.Length == 3)
-            {
-                int id = int.Parse(parts[0]);
-                if (id != myId)
-                {
-                    float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                    float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
-                    targetPositions[id] = new Vector3(x, y, 0);
-                }
-            }
+            if (parts.Length == 3) return;
+                
+            int id = int.Parse(parts[0]);
+            if (id != myId) return;
+                
+            float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
+            float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
+            targetPositions[id] = new Vector3(x, y, 0);
         }
-        else if (msg.StartsWith("BALL:"))
+        else if (msg.StartsWith("BALL:") && bola == null && myId != 1)
         {
-            if (bola == null) return;
-            if (myId != 1)
+            string[] parts = msg.Substring(5).Split(';');
+            if (parts.Length == 2)
             {
-                string[] parts = msg.Substring(5).Split(';');
-                if (parts.Length == 2)
-                {
-                    float x = float.Parse(parts[0], CultureInfo.InvariantCulture);
-                    float y = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                    bola.transform.position = new Vector3(x, y, 0);
-                }
+                float x = float.Parse(parts[0], CultureInfo.InvariantCulture);
+                float y = float.Parse(parts[1], CultureInfo.InvariantCulture); 
+                bola.transform.position = new Vector3(x, y, 0);
             }
+           
         }
-        else if (msg.StartsWith("SCORE:"))
+        else if (msg.StartsWith("SCORE:") && bola == null)
         {
             string[] parts = msg.Substring(6).Split(';');
-            if (parts.Length == 2 && bola == null)
+            if (parts.Length == 2)
             {
                 int scoreA = int.Parse(parts[0]);
                 int scoreB = int.Parse(parts[1]);
@@ -201,33 +173,31 @@ public class UdpClientFour : MonoBehaviour
             }
         }
     }
-    void SpawnPlayers()
+    void SetupPlayersInScene()
     {
+        if (playersInScene == null || playersInScene.Count < 4)
+        {
+            Debug.LogError("Adicione os 4 jogadores na lista playersInScene no Inspetor!");
+        }
         Vector3[] positions =
         {
-            new Vector3(-8.0f, 0.0f, 0.0f),
-            new Vector3(8.0f, 0.0f, 0.0f),
-            new Vector3(0.0f, 4.0f, 0.0f),
-            new Vector3(8.0f, -4.0f, 0.0f)
+            new Vector3(-8.0f, 1.0f, 0.0f),
+            new Vector3(-8.0f, 1.0f, 0.0f),
+            new Vector3(8.0f, 1.0f, 0.0f),
+            new Vector3(8.0f, -1.0f, 0.0f)
         };
-        /*for (int i = 1; i <= 4; i++)
+        for (int i = 0; i <= playersInScene.Count; i++)
         {
-            
-            p.name = $"Player {i}";
-            p.transform.position = positions[i - 1];
-            players[i] = p;
-            targetPositions[i] = p.transform.position;
-        }*/
-    }
-    public void SendUdpMessage(string msg)
-    {
-        byte[] data = Encoding.UTF8.GetBytes(msg);
-        client.Send(data, data.Length);
-    }
-    void OnApplicationQuit()
-    {
-        running = false;
-        client?.Close();
-        receiveThread?.Join();
+            GameObject p = playersInScene[i];
+            if (p == null)
+            {
+                Debug.LogError($"Jogador {i + 1} não atribuído!");
+            }
+            p.name = $"Player {i + 1}";
+            p.transform.position = positions[i];
+            players[i + 1] = p;
+            targetPositions[i + 1] = positions[i];
+        }
+        Debug.Log("Os jogadores foram configurados com sucesso!");
     }
 }
