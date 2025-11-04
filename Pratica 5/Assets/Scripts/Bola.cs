@@ -4,87 +4,118 @@ using TMPro;
 public class Bola : MonoBehaviour
 {
     private Rigidbody2D rb;
-    private UdpClientTwoClients udpClient;
-    private bool bolaLancada = false;
+    private UdpClientFourPlayers udpClient;
+    private bool lancada = false;
 
-    public int PontoA = 0;
-    public int PontoB = 0;
-    public TextMeshProUGUI textoPontoA;
-    public TextMeshProUGUI textoPontoB;
-    public TextMeshProUGUI VitoriaLocal;
-    public TextMeshProUGUI VitoriaRemote;
+    [Header("Pontuação dos Times")]
+    public int pontosEsquerda = 0; // Player1 + Player4
+    public int pontosDireita = 0;  // Player2 + Player3
 
-    public float velocidade = 5f;   // Velocidade base da bola
-    public float fatorDesvio = 2f;  // Quanto influencia o ponto de contato no ângulo
+    [Header("UI dos Pontos")]
+    public TextMeshProUGUI textoEsquerda;
+    public TextMeshProUGUI textoDireita;
+    public TextMeshProUGUI textoVitoria;
+
+    [Header("Configurações da Bola")]
+    public float velocidade = 6f;
+    public float fatorDesvio = 2f;
+    public int pontuacaoMaxima = 10;
+    private bool jogoEncerrado = false;
 
     void Start()
     {
-        
         rb = GetComponent<Rigidbody2D>();
-        udpClient = FindObjectOfType<UdpClientTwoClients>();
+        udpClient = FindFirstObjectByType<UdpClientFourPlayers>();
 
-        if (udpClient != null && udpClient.myId == 2)
-        {
+        if (udpClient != null && udpClient.myId == 1)
             Invoke("LancarBola", 1f);
+    }
+
+    void Update()
+    {
+        if (udpClient == null || jogoEncerrado) return;
+
+        if (!lancada && udpClient.myId == 1)
+        {
+            lancada = true;
+            Invoke("LancarBola", 1f);
+        }
+
+        if (udpClient.myId == 1)
+        {
+            string msg = $"BALL:{transform.position.x.ToString(System.Globalization.CultureInfo.InvariantCulture)};" +
+                         $"{transform.position.y.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+            udpClient.SendUdpMessage(msg);
         }
     }
 
     void LancarBola()
     {
-        float dirX = Random.Range(0, 2) == 0 ? -1 : 1;
-        float dirY = Random.Range(-0.5f, 0.5f); // inicia com pequeno ângulo
-        rb.linearVelocity = new Vector2(dirX, dirY).normalized * velocidade;
-    }
-
-    void Update()
-    {
-        if (udpClient == null) return;
-
-        if (!bolaLancada && udpClient.myId == 2)
-        {
-            bolaLancada = true;
-            Invoke("LancarBola", 1f);
-        }
-
-        if (udpClient.myId == 2)
-        {
-            string msg = "BALL:" +
-                         transform.position.x.ToString(System.Globalization.CultureInfo.InvariantCulture) + ";" +
-                         transform.position.y.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-            udpClient.SendUdpMessage(msg);
-        }
+        Vector2 dir = Random.insideUnitCircle.normalized;
+        rb.linearVelocity = dir * velocidade;
     }
 
     void OnCollisionEnter2D(Collision2D col)
     {
-        if (udpClient == null) return;
+        if (jogoEncerrado) return;
 
         if (col.gameObject.CompareTag("Raquete"))
         {
-            // Pega o ponto de contato
             float posYbola = transform.position.y;
             float posYraquete = col.transform.position.y;
             float alturaRaquete = col.collider.bounds.size.y;
-
-            // Calcula diferença (normalizado entre -1 e 1)
             float diferenca = (posYbola - posYraquete) / (alturaRaquete / 2f);
 
-            // Direção X mantém, Y é baseado na diferença
             Vector2 direcao = new Vector2(Mathf.Sign(rb.linearVelocity.x), diferenca * fatorDesvio);
             rb.linearVelocity = direcao.normalized * velocidade;
         }
         else if (col.gameObject.CompareTag("Gol1"))
         {
-            PontoB++;
-            textoPontoB.text = PontoB.ToString();
+            // Gol na esquerda → ponto pro time direito (P2 + P3)
+            pontosDireita++;
+            AtualizarPontuacao();
+            VerificarVitoria();
             ResetBola();
         }
         else if (col.gameObject.CompareTag("Gol2"))
         {
-            PontoA++;
-            textoPontoA.text = PontoA.ToString();
+            // Gol na direita → ponto pro time esquerdo (P1 + P4)
+            pontosEsquerda++;
+            AtualizarPontuacao();
+            VerificarVitoria();
             ResetBola();
+        }
+    }
+
+    public void AtualizarPontuacao()
+    {
+        if (textoEsquerda != null)
+            textoEsquerda.text = "Time Esquerdo: " + pontosEsquerda;
+        if (textoDireita != null)
+            textoDireita.text = "Time Direito: " + pontosDireita;
+
+        if (udpClient != null && udpClient.myId == 1)
+        {
+            string msg = $"SCORE:{pontosEsquerda};{pontosDireita}";
+            udpClient.SendUdpMessage(msg);
+        }
+    }
+
+    void VerificarVitoria()
+    {
+        if (pontosEsquerda >= pontuacaoMaxima)
+        {
+            jogoEncerrado = true;
+            rb.linearVelocity = Vector2.zero;
+            if (textoVitoria != null)
+                textoVitoria.text = "🏆 Time Esquerdo (P1+P4) Venceu!";
+        }
+        else if (pontosDireita >= pontuacaoMaxima)
+        {
+            jogoEncerrado = true;
+            rb.linearVelocity = Vector2.zero;
+            if (textoVitoria != null)
+                textoVitoria.text = "🏆 Time Direito (P2+P3) Venceu!";
         }
     }
 
@@ -92,44 +123,8 @@ public class Bola : MonoBehaviour
     {
         transform.position = Vector3.zero;
         rb.linearVelocity = Vector2.zero;
-        
-        if (PontoA > 10 || PontoB > 10)
-        {
-            GameOver();
-        }
-        
-        else if (udpClient != null && udpClient.myId == 2)
-        {
-            Invoke("LancarBola", 1f);
 
-            string msg = "SCORE:" + PontoA + ";" + PontoB;
-            udpClient.SendUdpMessage(msg);
-        }
-        
-        
-
-    }
-
-    void GameOver()
-    {
-        transform.position = Vector3.zero;
-        rb.linearVelocity = Vector2.zero;
-        if (PontoA > 10 && udpClient.myId == 1)
-        {
-            VitoriaLocal.gameObject.SetActive(true);
-        }
-        else if (PontoA > 10 && udpClient.myId == 2)
-        {
-            VitoriaRemote.gameObject.SetActive(true);
-        }
-        else if (PontoB > 10 && udpClient.myId == 1)
-        {
-            VitoriaRemote.gameObject.SetActive(true);
-        }
-        else if (PontoB > 10 && udpClient.myId == 2)
-        {
-            VitoriaLocal.gameObject.SetActive(true);
-        }
-        
+        if (!jogoEncerrado && udpClient != null && udpClient.myId == 1)
+            Invoke("LancarBola", 1.5f);
     }
 }
