@@ -21,43 +21,56 @@ public class UdpClientFourPlayers : MonoBehaviour
     private GameObject[] players = new GameObject[5];
     private ConcurrentQueue<string> messageQueue = new ConcurrentQueue<string>();
 
+    // 🕓 Novas variáveis para controle de início de jogo
+    private bool jogoComecou = false;
+    private int jogadoresConectados = 0;
+
     void Start()
     {
         client = new UdpClient();
 
-        // 🟢 Substitua pelo IP do computador que roda o servidor
+        // ⚠️ Coloque o IP da máquina que está rodando o servidor
         serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.152"), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
         receiveThread.Start();
 
+        // Envia mensagem inicial de conexão
         client.Send(Encoding.UTF8.GetBytes("HELLO"), 5);
+
+        Debug.Log("[Cliente] Aguardando ID do servidor...");
     }
 
     void Update()
     {
-        // processa mensagens da thread de rede
+        // Processa mensagens recebidas pela thread
         while (messageQueue.TryDequeue(out string msg))
             ProcessMessage(msg);
 
+        // 🚫 Espera o jogo começar antes de liberar o controle
+        if (!jogoComecou)
+        {
+            return;
+        }
+
         if (myId == -1 || localCube == null) return;
 
-        // movimento da raquete
+        // Movimento da raquete
         float move = Input.GetAxis("Vertical");
         Vector3 dir = new Vector3(0, move, 0);
         localCube.transform.Translate(dir * Time.deltaTime * Velocidade);
 
-        // limita posição Y
+        // Limita a posição Y
         Vector3 pos = localCube.transform.position;
         pos.y = Mathf.Clamp(pos.y, -3.5f, 3.5f);
         localCube.transform.position = pos;
 
-        // envia posição atual
+        // Envia posição atual ao servidor
         string msgPos = $"POS:{myId};{pos.x.ToString("F2", CultureInfo.InvariantCulture)};{pos.y.ToString("F2", CultureInfo.InvariantCulture)}";
         SendUdpMessage(msgPos);
 
-        // interpola os outros
+        // Atualiza visualmente os outros jogadores
         for (int i = 1; i <= 4; i++)
         {
             if (i == myId || players[i] == null) continue;
@@ -83,26 +96,45 @@ public class UdpClientFourPlayers : MonoBehaviour
             myId = int.Parse(msg.Substring(7));
             Debug.Log($"[Cliente] Meu ID = {myId}");
 
-            // encontra os jogadores
+            // Encontra os objetos dos jogadores
             players[1] = GameObject.Find("Player 1");
             players[2] = GameObject.Find("Player 2");
             players[3] = GameObject.Find("Player 3");
             players[4] = GameObject.Find("Player 4");
             localCube = players[myId];
 
-            // posições iniciais -> 1 e 4 esquerda, 2 e 3 direita
-            if (myId == 1) localCube.transform.position = new Vector3(-8f, 0f, 0f);
-            if (myId == 4) localCube.transform.position = new Vector3(-5f,  0f, 0f);
-            if (myId == 2) localCube.transform.position = new Vector3( 8f, 0f, 0f);
-            if (myId == 3) localCube.transform.position = new Vector3( 5f,  0f, 0f);
+            // Posições iniciais (2x2 times)
+            if (myId == 1) localCube.transform.position = new Vector3(-8f, 0f, 0f); // Defesa esquerda
+            if (myId == 4) localCube.transform.position = new Vector3(-5f, 0f, 0f); // Ataque esquerda
+            if (myId == 3) localCube.transform.position = new Vector3(5f, 0f, 0f);  // Ataque direita
+            if (myId == 2) localCube.transform.position = new Vector3(8f, 0f, 0f);  // Defesa direita
 
-            // reseta bola
+            // Bola é resetada no início
+            bola = GameObject.Find("Bola");
             if (bola != null)
             {
                 bola.transform.position = Vector3.zero;
-                bola.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                var rb = bola.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                    rb.linearVelocity = Vector2.zero;
             }
         }
+
+        // 🔹 Atualização da contagem de jogadores conectados
+        else if (msg.StartsWith("READY:"))
+        {
+            jogadoresConectados = int.Parse(msg.Substring(6));
+            Debug.Log($"[Cliente] Jogadores conectados: {jogadoresConectados}/4");
+        }
+
+        // 🔹 Sinal de início do jogo
+        else if (msg.StartsWith("START"))
+        {
+            jogoComecou = true;
+            Debug.Log("[Cliente] 🎮 Todos conectados! O jogo começou!");
+        }
+
+        // Atualização de posição das raquetes
         else if (msg.StartsWith("POS:"))
         {
             string[] parts = msg.Substring(4).Split(';');
@@ -111,6 +143,8 @@ public class UdpClientFourPlayers : MonoBehaviour
             float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
             if (id != myId) remotePositions[id] = new Vector3(x, y, 0);
         }
+
+        // Atualização da bola
         else if (msg.StartsWith("BALL:"))
         {
             if (myId != 1 && bola != null)
@@ -121,21 +155,20 @@ public class UdpClientFourPlayers : MonoBehaviour
                 bola.transform.position = new Vector3(x, y, 0);
             }
         }
+
+        // Atualização da pontuação
         else if (msg.StartsWith("SCORE:"))
         {
             string[] parts = msg.Substring(6).Split(';');
-            if (parts.Length == 2)
+            if (parts.Length == 2 && bola != null)
             {
                 int scoreEsq = int.Parse(parts[0]);
                 int scoreDir = int.Parse(parts[1]);
 
-                if (bola != null)
-                {
-                    Bola bolaScript = bola.GetComponent<Bola>();
-                    bolaScript.pontosEsquerda = scoreEsq;
-                    bolaScript.pontosDireita = scoreDir;
-                    bolaScript.AtualizarPontuacao();
-                }
+                Bola bolaScript = bola.GetComponent<Bola>();
+                bolaScript.pontosEsquerda = scoreEsq;
+                bolaScript.pontosDireita = scoreDir;
+                bolaScript.AtualizarPontuacao();
             }
         }
     }

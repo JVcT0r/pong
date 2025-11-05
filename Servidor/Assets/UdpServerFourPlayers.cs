@@ -13,6 +13,8 @@ public class UdpServerFourPlayers : MonoBehaviour
     Dictionary<string, int> clientIds = new Dictionary<string, int>();
     int nextId = 1;
 
+    bool jogoIniciado = false;
+
     void Start()
     {
         server = new UdpClient(5001);
@@ -34,7 +36,6 @@ public class UdpServerFourPlayers : MonoBehaviour
                 string msg = Encoding.UTF8.GetString(data);
                 string key = anyEP.Address + ":" + anyEP.Port;
 
-                // Registra cliente novo
                 if (!clientIds.ContainsKey(key))
                 {
                     if (nextId <= 4)
@@ -43,6 +44,17 @@ public class UdpServerFourPlayers : MonoBehaviour
                         string assignMsg = "ASSIGN:" + clientIds[key];
                         server.Send(Encoding.UTF8.GetBytes(assignMsg), assignMsg.Length, anyEP);
                         Debug.Log($"Novo cliente conectado: {key} => ID {clientIds[key]}");
+
+                        // Informa a todos quantos já entraram
+                        Broadcast($"READY:{clientIds.Count}");
+
+                        // Quando todos entram, envia START
+                        if (clientIds.Count == 4 && !jogoIniciado)
+                        {
+                            jogoIniciado = true;
+                            Broadcast("START");
+                            Debug.Log("🎮 Todos conectados! Iniciando o jogo!");
+                        }
                     }
                     else
                     {
@@ -51,10 +63,7 @@ public class UdpServerFourPlayers : MonoBehaviour
                     }
                 }
 
-                // Debug pra ver mensagens chegando
-                Debug.Log($"Servidor recebeu: {msg}");
-
-                // Retransmite mensagens de posição, bola ou pontuação
+                // retransmissão de mensagens comuns
                 if (msg.StartsWith("POS:") || msg.StartsWith("BALL:") || msg.StartsWith("SCORE:"))
                 {
                     Broadcast(msg);
@@ -67,11 +76,9 @@ public class UdpServerFourPlayers : MonoBehaviour
         }
     }
 
-    // Manda a mensagem pra todos os clientes conectados
     void Broadcast(string msg)
     {
         byte[] data = Encoding.UTF8.GetBytes(msg);
-
         foreach (var kvp in clientIds)
         {
             try
@@ -80,10 +87,7 @@ public class UdpServerFourPlayers : MonoBehaviour
                 IPEndPoint ep = new IPEndPoint(IPAddress.Parse(parts[0]), int.Parse(parts[1]));
                 server.Send(data, data.Length, ep);
             }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning($"Falha ao enviar para {kvp.Key}: {ex.Message}");
-            }
+            catch { }
         }
     }
 
