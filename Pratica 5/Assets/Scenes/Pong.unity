@@ -167,7 +167,6 @@ MonoBehaviour:
   Velocidade: 20
   localCube: {fileID: 251716031}
   bola: {fileID: 982695413}
-  jogoComecou: 0
 --- !u!1 &125305613
 GameObject:
   m_ObjectHideFlags: 0
@@ -1283,11 +1282,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb7ee2cf82064fe469db2c0499d7d416, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  velocidade: 15
   pontosEsquerda: 0
   pontosDireita: 0
-  textoPontosEsquerda: {fileID: 1890695342}
-  textoPontosDireita: {fileID: 125305615}
+  textoEsquerda: {fileID: 1890695342}
+  textoDireita: {fileID: 125305615}
+  textoVitoria: {fileID: 0}
+  velocidade: 15
+  fatorDesvio: 2
+  pontuacaoMaxima: 10
 --- !u!1 &1067856764 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8152093384007377599, guid: edf400e70a7dff84390ab9ea5d901aca, type: 3}
