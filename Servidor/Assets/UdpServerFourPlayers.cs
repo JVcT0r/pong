@@ -36,7 +36,6 @@ public class UdpServerFourPlayers : MonoBehaviour
                 string msg = Encoding.UTF8.GetString(data);
                 string key = anyEP.Address + ":" + anyEP.Port;
 
-                // atribui ID novo
                 if (!clientIds.ContainsKey(key))
                 {
                     if (nextId <= 4)
@@ -46,10 +45,10 @@ public class UdpServerFourPlayers : MonoBehaviour
                         server.Send(Encoding.UTF8.GetBytes(assignMsg), assignMsg.Length, anyEP);
                         Debug.Log($"Novo cliente conectado: {key} => ID {clientIds[key]}");
 
-                        // avisa quantos já entraram
+                        // Informa a todos quantos já entraram
                         Broadcast($"READY:{clientIds.Count}");
 
-                        // quando 4 jogadores entram → START
+                        // Quando todos entram, envia START
                         if (clientIds.Count == 4 && !jogoIniciado)
                         {
                             jogoIniciado = true;
@@ -57,9 +56,14 @@ public class UdpServerFourPlayers : MonoBehaviour
                             Debug.Log("🎮 Todos conectados! Iniciando o jogo!");
                         }
                     }
+                    else
+                    {
+                        Debug.LogWarning($"Conexão extra ignorada: {key}");
+                        continue;
+                    }
                 }
 
-                // retransmite mensagens normais
+                // retransmissão de mensagens comuns
                 if (msg.StartsWith("POS:") || msg.StartsWith("BALL:") || msg.StartsWith("SCORE:"))
                 {
                     Broadcast(msg);
