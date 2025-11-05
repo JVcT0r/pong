@@ -21,22 +21,21 @@ public class UdpClientFourPlayers : MonoBehaviour
     private GameObject[] players = new GameObject[5];
     private ConcurrentQueue<string> messageQueue = new ConcurrentQueue<string>();
 
-    // 🕓 Novas variáveis para controle de início de jogo
-    private bool jogoComecou = false;
+    // ✅ Agora público (para Bola acessar diretamente)
+    [HideInInspector] public bool jogoComecou = false;
     private int jogadoresConectados = 0;
 
     void Start()
     {
         client = new UdpClient();
 
-        // ⚠️ Coloque o IP da máquina que está rodando o servidor
+        // ⚠️ Coloque aqui o IP da máquina que roda o servidor
         serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.152"), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
         receiveThread.Start();
 
-        // Envia mensagem inicial de conexão
         client.Send(Encoding.UTF8.GetBytes("HELLO"), 5);
 
         Debug.Log("[Cliente] Aguardando ID do servidor...");
@@ -44,33 +43,31 @@ public class UdpClientFourPlayers : MonoBehaviour
 
     void Update()
     {
-        // Processa mensagens recebidas pela thread
+        // Processa mensagens da thread
         while (messageQueue.TryDequeue(out string msg))
             ProcessMessage(msg);
 
-        // 🚫 Espera o jogo começar antes de liberar o controle
+        // Se o jogo ainda não começou, nada se move
         if (!jogoComecou)
-        {
             return;
-        }
 
         if (myId == -1 || localCube == null) return;
 
-        // Movimento da raquete
+        // Movimento vertical
         float move = Input.GetAxis("Vertical");
         Vector3 dir = new Vector3(0, move, 0);
         localCube.transform.Translate(dir * Time.deltaTime * Velocidade);
 
-        // Limita a posição Y
+        // Limita o movimento vertical
         Vector3 pos = localCube.transform.position;
         pos.y = Mathf.Clamp(pos.y, -3.5f, 3.5f);
         localCube.transform.position = pos;
 
-        // Envia posição atual ao servidor
+        // Envia posição do jogador local
         string msgPos = $"POS:{myId};{pos.x.ToString("F2", CultureInfo.InvariantCulture)};{pos.y.ToString("F2", CultureInfo.InvariantCulture)}";
         SendUdpMessage(msgPos);
 
-        // Atualiza visualmente os outros jogadores
+        // Atualiza visual dos outros jogadores
         for (int i = 1; i <= 4; i++)
         {
             if (i == myId || players[i] == null) continue;
@@ -78,6 +75,7 @@ public class UdpClientFourPlayers : MonoBehaviour
         }
     }
 
+    // Thread que escuta o servidor
     void ReceiveData()
     {
         IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
@@ -89,6 +87,7 @@ public class UdpClientFourPlayers : MonoBehaviour
         }
     }
 
+    // Processa mensagens do servidor
     void ProcessMessage(string msg)
     {
         if (msg.StartsWith("ASSIGN:"))
@@ -96,21 +95,21 @@ public class UdpClientFourPlayers : MonoBehaviour
             myId = int.Parse(msg.Substring(7));
             Debug.Log($"[Cliente] Meu ID = {myId}");
 
-            // Encontra os objetos dos jogadores
+            // Encontra jogadores e bola
             players[1] = GameObject.Find("Player 1");
             players[2] = GameObject.Find("Player 2");
             players[3] = GameObject.Find("Player 3");
             players[4] = GameObject.Find("Player 4");
             localCube = players[myId];
-
-            // Posições iniciais (2x2 times)
-            if (myId == 1) localCube.transform.position = new Vector3(-8f, 0f, 0f); // Defesa esquerda
-            if (myId == 4) localCube.transform.position = new Vector3(-5f, 0f, 0f); // Ataque esquerda
-            if (myId == 3) localCube.transform.position = new Vector3(5f, 0f, 0f);  // Ataque direita
-            if (myId == 2) localCube.transform.position = new Vector3(8f, 0f, 0f);  // Defesa direita
-
-            // Bola é resetada no início
             bola = GameObject.Find("Bola");
+
+            // Posições iniciais
+            if (myId == 1) localCube.transform.position = new Vector3(-8f, 0f, 0f); // defesa esquerda
+            if (myId == 4) localCube.transform.position = new Vector3(-5f, 0f, 0f); // ataque esquerda
+            if (myId == 3) localCube.transform.position = new Vector3(5f, 0f, 0f);  // ataque direita
+            if (myId == 2) localCube.transform.position = new Vector3(8f, 0f, 0f);  // defesa direita
+
+            // Reseta bola
             if (bola != null)
             {
                 bola.transform.position = Vector3.zero;
@@ -120,43 +119,52 @@ public class UdpClientFourPlayers : MonoBehaviour
             }
         }
 
-        // 🔹 Atualização da contagem de jogadores conectados
+        // Quantos jogadores conectaram
         else if (msg.StartsWith("READY:"))
         {
             jogadoresConectados = int.Parse(msg.Substring(6));
             Debug.Log($"[Cliente] Jogadores conectados: {jogadoresConectados}/4");
         }
 
-        // 🔹 Sinal de início do jogo
+        // Quando todos entram, começa o jogo
         else if (msg.StartsWith("START"))
         {
             jogoComecou = true;
-            Debug.Log("[Cliente] 🎮 Todos conectados! O jogo começou!");
+            Debug.Log("[Cliente] 🎮 Todos conectados — Jogo começou!");
         }
 
-        // Atualização de posição das raquetes
+        // Atualização de posições das raquetes
         else if (msg.StartsWith("POS:"))
         {
             string[] parts = msg.Substring(4).Split(';');
-            int id = int.Parse(parts[0]);
-            float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
-            float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
-            if (id != myId) remotePositions[id] = new Vector3(x, y, 0);
-        }
-
-        // Atualização da bola
-        else if (msg.StartsWith("BALL:"))
-        {
-            if (myId != 1 && bola != null)
+            if (parts.Length == 3)
             {
-                string[] parts = msg.Substring(5).Split(';');
-                float x = float.Parse(parts[0], CultureInfo.InvariantCulture);
-                float y = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                bola.transform.position = new Vector3(x, y, 0);
+                int id = int.Parse(parts[0]);
+                if (id != myId)
+                {
+                    float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                    float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
+                    remotePositions[id] = new Vector3(x, y, 0);
+                }
             }
         }
 
-        // Atualização da pontuação
+        // Atualização da bola (clientes recebem do player 1)
+        else if (msg.StartsWith("BALL:"))
+        {
+            if (bola != null && myId != 1)
+            {
+                string[] parts = msg.Substring(5).Split(';');
+                if (parts.Length == 2)
+                {
+                    float x = float.Parse(parts[0], CultureInfo.InvariantCulture);
+                    float y = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                    bola.transform.position = new Vector3(x, y, 0);
+                }
+            }
+        }
+
+        // Atualização de pontuação (somente recebida dos outros)
         else if (msg.StartsWith("SCORE:"))
         {
             string[] parts = msg.Substring(6).Split(';');
@@ -173,6 +181,7 @@ public class UdpClientFourPlayers : MonoBehaviour
         }
     }
 
+    // Envia mensagens ao servidor
     public void SendUdpMessage(string msg)
     {
         client.Send(Encoding.UTF8.GetBytes(msg), msg.Length);

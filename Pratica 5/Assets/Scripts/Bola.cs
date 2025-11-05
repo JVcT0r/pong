@@ -13,7 +13,6 @@ public class Bola : MonoBehaviour
     public TMP_Text textoPontosDireita;
 
     private bool emJogo = false;
-    private bool jogoComecou = false; // agora a bola só anda depois do START
 
     private UdpClientFourPlayers udpClient;
 
@@ -30,27 +29,23 @@ public class Bola : MonoBehaviour
     {
         if (udpClient == null) return;
 
-        // ⚠️ só começa se o servidor enviou "START"
-        jogoComecou = (bool)udpClient.GetType().GetField("jogoComecou", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(udpClient);
-
-        if (!jogoComecou)
+        // ⚠️ só começa se o servidor mandou START
+        if (!udpClient.jogoComecou)
         {
             rb.linearVelocity = Vector2.zero;
             transform.position = Vector3.zero;
             return;
         }
 
-        // Só o Player 1 pode lançar a bola e enviar posição
-        if (!emJogo && udpClient.myId == 1)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                LançarBola();
-        }
-
-        // Envia a posição da bola (apenas o Player 1)
+        // 🧠 Player 1 é o host — controla bola e envia posição
         if (udpClient.myId == 1)
         {
+            if (!emJogo && Input.GetKeyDown(KeyCode.Space))
+            {
+                LançarBola();
+            }
+
+            // Sempre envia posição da bola para os outros
             string msgBall = $"BALL:{transform.position.x:F2};{transform.position.y:F2}";
             udpClient.SendUdpMessage(msgBall);
         }
@@ -67,7 +62,7 @@ public class Bola : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // rebate nas raquetes e paredes
+        // rebate em raquetes e paredes
         if (collision.collider.CompareTag("Raquete") || collision.collider.CompareTag("Parede"))
         {
             rb.linearVelocity = rb.linearVelocity.normalized * velocidade;
@@ -76,7 +71,7 @@ public class Bola : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!jogoComecou) return;
+        if (!udpClient.jogoComecou) return;
 
         // 🟦 Gol no lado direito
         if (other.CompareTag("Gol2"))
@@ -85,7 +80,7 @@ public class Bola : MonoBehaviour
             AtualizarPontuacao();
             ReiniciarBola();
 
-            // apenas Player 1 envia SCORE
+            // Apenas Player 1 envia SCORE
             if (udpClient.myId == 1)
             {
                 string msgScore = $"SCORE:{pontosEsquerda};{pontosDireita}";
