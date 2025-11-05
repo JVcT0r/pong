@@ -74,7 +74,7 @@ public class Bola : MonoBehaviour
             // Gol na esquerda → ponto pro time direito (P2 + P3)
             pontosDireita++;
             AtualizarPontuacao();
-            VerificarVitoria();
+            //VerificarVitoria();
             ResetBola();
         }
         else if (col.gameObject.CompareTag("Gol2"))
@@ -82,7 +82,7 @@ public class Bola : MonoBehaviour
             // Gol na direita → ponto pro time esquerdo (P1 + P4)
             pontosEsquerda++;
             AtualizarPontuacao();
-            VerificarVitoria();
+            //VerificarVitoria();
             ResetBola();
         }
     }
