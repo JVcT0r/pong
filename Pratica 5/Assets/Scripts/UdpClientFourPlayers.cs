@@ -93,8 +93,8 @@ public class UdpClientFourPlayers : MonoBehaviour
             // posições iniciais -> 1 e 4 esquerda, 2 e 3 direita
             if (myId == 1) localCube.transform.position = new Vector3(-8f, 0f, 0f);
             if (myId == 4) localCube.transform.position = new Vector3(-8f,  0f, 0f);
-            if (myId == 2) localCube.transform.position = new Vector3( 8f, 0f, 0f);
-            if (myId == 3) localCube.transform.position = new Vector3( 8f,  0f, 0f);
+            if (myId == 2) localCube.transform.position = new Vector3( -5f, 0f, 0f);
+            if (myId == 3) localCube.transform.position = new Vector3( 5f,  0f, 0f);
 
             // reseta bola
             if (bola != null)
