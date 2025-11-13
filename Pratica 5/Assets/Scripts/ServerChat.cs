@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,6 +11,7 @@ public class TcpServerUnity : MonoBehaviour
     TcpListener server;
     Thread serverThread;
     public TMP_Text text;
+    private string msg;
 
     void Start()
     {
@@ -17,7 +19,12 @@ public class TcpServerUnity : MonoBehaviour
         serverThread.IsBackground = true;
         serverThread.Start();
     }
-    
+
+    private void Update()
+    {
+        text.text = msg;
+    }
+
     void StartServer()
     {
         server = new TcpListener(IPAddress.Any, 8080);
@@ -31,7 +38,7 @@ public class TcpServerUnity : MonoBehaviour
 
             byte[] buffer = new byte[1024];
             int len = stream.Read(buffer, 0, buffer.Length);
-            string msg = Encoding.UTF8.GetString(buffer, 0, len);
+            msg = Encoding.UTF8.GetString(buffer, 0, len);
             Debug.Log($"[Servidor] Mensagem recebida: {msg}");
             text.text = msg;
 
