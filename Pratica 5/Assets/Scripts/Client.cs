@@ -36,7 +36,7 @@ public class UdpClientTwoClients : MonoBehaviour
         // bola sempre começa no centro
         if (bola != null)
         {
-            bola.transform.position = Vector3.zero;
+            bola.transform.position = new Vector3(-2.7f, 0.13f, 0f);
             var rb = bola.GetComponent<Rigidbody2D>();
             if (rb != null)
                 rb.linearVelocity = Vector2.zero;
@@ -100,8 +100,8 @@ public class UdpClientTwoClients : MonoBehaviour
                 localCube = GameObject.Find("Player 1");
                 remoteCube = GameObject.Find("Player 2");
 
-                localCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
-                remoteCube.transform.position = new Vector3(8f, 0f, 0f);  // Direita
+                localCube.transform.position = new Vector3(-7.6f, 0f, 0f); // Esquerda
+                remoteCube.transform.position = new Vector3(2.3f, 0f, 0f);  // Direita
 
                 // Inicializa remotePos corretamente
                 remotePos = remoteCube.transform.position;
@@ -111,8 +111,8 @@ public class UdpClientTwoClients : MonoBehaviour
                 localCube = GameObject.Find("Player 2");
                 remoteCube = GameObject.Find("Player 1");
 
-                localCube.transform.position = new Vector3(8f, 0f, 0f);   // Direita
-                remoteCube.transform.position = new Vector3(-8f, 0f, 0f); // Esquerda
+                localCube.transform.position = new Vector3(2.3f, 0f, 0f);   // Direita
+                remoteCube.transform.position = new Vector3(-7.6f, 0f, 0f); // Esquerda
 
                 // Inicializa remotePos corretamente
                 remotePos = remoteCube.transform.position;
