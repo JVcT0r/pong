@@ -673,11 +673,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 35efd146-f2ae-4dad-960d-1217732b7b3d
+  cloudProjectId: a398e67f-0f15-4af7-bb75-987e74107f01
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
   projectName: Pratica 5
-  organizationId: replaydev
+  organizationId: guedesisac2017
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

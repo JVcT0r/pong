@@ -1,74 +1,21 @@
-using System;
-using TMPro;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using Unity.Networking.Transport.Relay;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using UnityEngine.UI;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.Relay;
-using Unity.Services.Relay.Models;
+using Unity.Netcode;
+using UnityEngine.UI;
 
 public class MultiplayerUI : MonoBehaviour
 {
-    [SerializeField] private Button hostButton;
-    [SerializeField] private Button clientButton;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] Button hostBtn, joinBtn;
 
-
-private async void Awake()
-{
-    await UnityServices.InitializeAsync();
-    await AuthenticationService.Instance.SignInAnonymouslyAsync();
-}
-
-void Start()
+    void Awake()
     {
-        hostButton.onClick.AddListener(HostButtonOnClick);
-        clientButton.onClick.AddListener(ClientButtonOnClick);
-        
-        
+        AssignInputs();
     }
 
-    [SerializeField] private TextMeshProUGUI JoinCodeText;
-    private async void HostButtonOnClick()
+    void AssignInputs()
     {
-        try
-        {
-            
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(1);
-            string JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-            JoinCodeText.text = JoinCode;
-            
-            RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
-            
-            NetworkManager.Singleton.StartHost();
-        }
-        catch (RelayServiceException e)
-        {
-            Debug.Log(e);
-        }
-        
-    }
-
-    [SerializeField] private TMP_InputField JoinCodeInput;
-    private async void ClientButtonOnClick()
-    {
-        try
-        {
-           JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(JoinCodeInput.text);
-            
-            RelayServerData relayServerData = new RelayServerData(joinAllocation, "dtls");
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
-            
-            NetworkManager.Singleton.StartClient();
-        }
-        catch (RelayServiceException e)
-        {
-            Debug.Log(e);
-        }
-        
+        hostBtn.onClick.AddListener( delegate { NetworkManager.Singleton.StartHost(); } );
+        joinBtn.onClick.AddListener( delegate { NetworkManager.Singleton.StartClient(); } );
     }
 }
