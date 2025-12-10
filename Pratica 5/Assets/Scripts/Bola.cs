@@ -95,7 +95,7 @@ public class Bola : MonoBehaviour
         
         if (PontoA > 10 || PontoB > 10)
         {
-            GameOver();
+            //GameOver();
         }
         
         else if (udpClient != null && udpClient.myId == 2)
